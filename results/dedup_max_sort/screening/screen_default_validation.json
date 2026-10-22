@@ -1,0 +1,16 @@
+[
+  {
+    "query": "q3_max_join_latest",
+    "budget": "default",
+    "rows": 14999347,
+    "missing": 0,
+    "extra": 0
+  },
+  {
+    "query": "q3_max_sort_latest",
+    "budget": "default",
+    "rows": 14999347,
+    "missing": 0,
+    "extra": 0
+  }
+]

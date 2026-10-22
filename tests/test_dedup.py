@@ -19,6 +19,7 @@ SCHEMA = {
 }
 OUTPUT_SCHEMA = {name: SCHEMA[name] for name in ("customer_id", "order_id", "ts")}
 OUTPUT_SCHEMA["amount"] = pl.Float64
+QUERIES = ("q3_sort_unique_latest", "q3_max_sort_latest")
 Sale = tuple[int | None, int | None, datetime | None, int | None, float | None]
 
 
@@ -32,18 +33,20 @@ class DedupTests(unittest.TestCase):
                 pl.DataFrame(rows, schema=SCHEMA, orient="row").write_parquet(path)
                 paths.append(str(path))
             sales = pl.scan_parquet(paths)
-            output = root / "result.parquet"
-            polars_query("q3_sort_unique_latest", sales, pl.LazyFrame()).sink_parquet(
-                output, engine="streaming"
-            )
-            actual = pl.read_parquet(output).sort("customer_id", nulls_last=True)
             with duckdb.connect() as connection:
                 connection.read_parquet(paths).create_view("sales")
                 expected = connection.execute(
                     f"{SQL['q3_window_latest']} ORDER BY customer_id NULLS LAST"
                 ).fetchall()
-            self.assertEqual(actual.schema, OUTPUT_SCHEMA)
-            self.assertEqual(actual.rows(), expected)
+            for query in QUERIES:
+                with self.subTest(query=query):
+                    output = root / f"{query}.parquet"
+                    polars_query(query, sales, pl.LazyFrame()).sink_parquet(
+                        output, engine="streaming"
+                    )
+                    actual = pl.read_parquet(output).sort("customer_id", nulls_last=True)
+                    self.assertEqual(actual.schema, OUTPUT_SCHEMA)
+                    self.assertEqual(actual.rows(), expected)
 
     def test_edge_cases(self) -> None:
         early = datetime(2026, 1, 1)
@@ -86,6 +89,36 @@ class DedupTests(unittest.TestCase):
                 generator.randrange(1, 2000) / 4,
             )
             for order_id in range(1200)
+        ]
+        generator.shuffle(rows)
+        self.assert_matches_sql([rows[index::4] for index in range(4)])
+
+    def test_duplicate_winners_across_parquet_files(self) -> None:
+        early = datetime(2026, 1, 1)
+        late = datetime(2026, 1, 2)
+        winners: list[Sale] = [
+            (1, 30, late, 2, 3.5),
+            (2, -10, late, -3, 4.5),
+            (3, None, None, 4, None),
+            (None, 40, late, None, 5.5),
+        ]
+        self.assert_matches_sql([
+            winners + [(1, 50, early, 6, 7.5), (2, -20, late, 8, 9.5)],
+            list(reversed(winners)) + [(1, 20, late, 10, 11.5)],
+        ])
+
+    def test_randomized_negative_and_null_values(self) -> None:
+        generator = random.Random(20261022)
+        start = datetime(2026, 1, 1)
+        rows: list[Sale] = [
+            (
+                generator.choice([None, *range(-18, 19)]),
+                order_id,
+                generator.choice([None, *(start + timedelta(days=day) for day in range(5))]),
+                generator.choice([None, *range(-9, 10)]),
+                generator.choice([None, generator.randrange(-2000, 2001) / 4]),
+            )
+            for order_id in range(-600, 600)
         ]
         generator.shuffle(rows)
         self.assert_matches_sql([rows[index::4] for index in range(4)])

@@ -10,7 +10,7 @@ import sys
 from collections import defaultdict
 
 ORDER_E = ["duckdb", "polars", "spark"]
-ORDER_Q = ["q1_filter_agg", "q2_join_agg", "q3_window_latest", "q3_sort_unique_latest", "q4_highcard_agg"]
+ORDER_Q = ["q1_filter_agg", "q2_join_agg", "q3_window_latest", "q3_sort_unique_latest", "q3_max_sort_latest", "q4_highcard_agg"]
 ORDER_S = ["10m", "50m", "150m"]
 
 

@@ -1,0 +1,1 @@
+{"engine": "duckdb", "size": "150m", "query": "q3_window_latest", "mem": "3g", "wall_s": 18.497, "peak_rss_gib": 3.04, "min_sys_avail_gib": 0.93, "exit": 0, "version": "2.0.0", "rows_out": 14999347, "setup_s": 0.103, "query_s": 18.238, "status": "ok", "rep": 1, "pre_avail_gib": 14.41, "pre_load1": 1.11, "pre_cpu_busy_pct": 1.6, "started": "2026-10-22T13:43:20"}

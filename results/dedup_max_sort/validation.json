@@ -1,0 +1,44 @@
+[
+  {
+    "query": "q3_sort_unique_latest",
+    "rep": 1,
+    "rows": 14999347,
+    "missing": 0,
+    "extra": 0
+  },
+  {
+    "query": "q3_max_sort_latest",
+    "rep": 1,
+    "rows": 14999347,
+    "missing": 0,
+    "extra": 0
+  },
+  {
+    "query": "q3_max_sort_latest",
+    "rep": 2,
+    "rows": 14999347,
+    "missing": 0,
+    "extra": 0
+  },
+  {
+    "query": "q3_sort_unique_latest",
+    "rep": 2,
+    "rows": 14999347,
+    "missing": 0,
+    "extra": 0
+  },
+  {
+    "query": "q3_sort_unique_latest",
+    "rep": 3,
+    "rows": 14999347,
+    "missing": 0,
+    "extra": 0
+  },
+  {
+    "query": "q3_max_sort_latest",
+    "rep": 3,
+    "rows": 14999347,
+    "missing": 0,
+    "extra": 0
+  }
+]

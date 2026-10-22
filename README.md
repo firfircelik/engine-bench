@@ -5,7 +5,7 @@ Scripts, raw results and query plans behind the article
 
 **Thesis:** on one 8 vCPU machine with a 4.5 GiB process memory cap, DuckDB finished every query at every size, local Spark finished almost everything 5x to 12x slower, and Polars was fast until its window dedup at 150M rows did not fit.
 
-Everything in `results/` and `results_duckdb156/` is the raw output of the runs the article reports. Nothing here was re-run or edited after the fact.
+The top-level files in `results/` and `results_duckdb156/` are the raw output of the runs the article reports. Follow-up experiments are kept in separate subdirectories; the original records are unchanged.
 
 ## Setup
 
@@ -139,18 +139,19 @@ dot -Tsvg plans/polars_dedup_physical_streaming.dot -o plans/polars_dedup.svg   
 
 ## Alternative Polars dedup
 
-`q3_sort_unique_latest` projects the four output columns, sorts by customer and descending timestamp/order ID, then keeps the first row per customer. Its [physical plan](plans/polars_sort_unique_physical_streaming.dot) uses streaming sort and sorted-unique instead of the window fallback. The original query stays unchanged.
+`q3_max_sort_latest` first finds each customer's maximum timestamp and uses a semi join to keep matching rows. It then sorts those candidates by customer and descending order ID and keeps one row per customer. This avoids sorting all 150M rows. Its [physical plan on the 10M data](plans/polars_max_sort_physical_streaming.dot) has no in-memory fallback.
 
-At 150M rows on Linux, it finished 3/3 runs under the 4.5 GiB cap with `POLARS_OOC_MEMORY_BUDGET_MB=1024`, peaking at 2.50–2.74 GiB. Defaults and a 3072 MB spill budget still exceeded the cap. This is a memory tradeoff: median wall time was 90.58 s, versus 17.56 s for one DuckDB reference run. [Results, host and validation](results/dedup_linux/README.md).
+At 150M rows it finished 3/3 Linux runs with default Polars memory settings: **14.23 s median**, 3.99–4.04 GiB peak RSS, under the same 4.5 GiB cap. Sort + unique took 80.56 s median on that runner with its 1024 MB spill budget. Every output matched DuckDB row for row. [Raw results, host and validation](results/dedup_max_sort/README.md).
+
+The original window query and `q3_sort_unique_latest` remain available for comparison. The latter sorts all rows and needed `POLARS_OOC_MEMORY_BUDGET_MB=1024` to fit on the [first Linux run](results/dedup_linux/README.md), taking 90.58 s median. Its [Windows trials](results/dedup_windows/README.md) exceeded the cap.
 
 ```bash
 python bench.py --sizes 150m --reps 3 --engines polars \
-  --queries q3_window_latest,q3_sort_unique_latest --budget-gib 4.5 \
-  --env POLARS_OOC_MEMORY_BUDGET_MB=1024 --tag dedup_sort_unique
+  --queries q3_max_sort_latest --budget-gib 4.5 --tag dedup_max_sort_run
 python -m unittest discover -s tests -v
 ```
 
-The spill budget is the same undocumented Polars 2.0 setting used above; it does not cap total process RSS. [Windows trials](results/dedup_windows/README.md) still exceeded the cap, so the successful result is specific to the recorded Linux setup.
+The follow-up results are specific to the recorded Linux hosts. The spill budget used for sort + unique is undocumented and does not cap total process RSS.
 
 ## Known limitations
 
