@@ -153,6 +153,25 @@ python -m unittest discover -s tests -v
 
 The follow-up results are specific to the recorded Linux hosts. The spill budget used for sort + unique is undocumented and does not cap total process RSS.
 
+## Update (Oct 23): Polars with an out-of-core budget
+
+Ritchie Vink (Polars) pointed out that only DuckDB was told about the memory limit (`memory_limit = 3GB`), so Polars did not know it should stay under 4 GiB, and suggested `POLARS_OOC_MEMORY_BUDGET_MB` for a fairer comparison. On October 23, 2026 I reran every Polars query at 150M rows with that budget, on the same VM, with the same harness and 4.5 GiB cap, plus a same-session Polars default and DuckDB reference. Median wall seconds, finished runs out of 3, median peak RSS of finished runs (range at kill for failed runs):
+
+| Query | Polars default | Polars 3072 MB | Polars 1024 MB | DuckDB 3GB |
+|---|---|---|---|---|
+| Filter + aggregate | 1.02 s, 3/3, 1.14 GiB | 1.04 s, 3/3, 1.15 GiB | not run | 0.99 s, 3/3, 0.73 GiB |
+| Join + aggregate | 1.53 s, 3/3, 1.92 GiB | 1.51 s, 3/3, 2.00 GiB | not run | 1.69 s, 3/3, 0.37 GiB |
+| Window dedup `over(order_by)` | 0/3, killed 4.63-4.70 | 0/3, killed 4.61-4.75 | 0/3, killed 4.63-4.83 | 10.80 s, 3/3, 3.02 GiB |
+| Sort + unique dedup | 0/3, killed 4.51-4.55 | 0/3, killed 4.51-4.64 | 31.28 s, 3/3, 2.29 GiB | |
+| Max timestamp + sort dedup | 5.61 s, 3/3, 4.02 GiB | 6.31 s, 3/3, 3.68 GiB | not run | |
+| High-cardinality group by | 4.50 s, 3/3, 4.25 GiB | 6.17 s, 3/3, 3.46 GiB | 6.69 s, 3/3, 2.75 GiB | 9.56 s, 3/3, 3.01 GiB |
+
+The window dedup was also 0/3 with a 512 MB budget (killed at 4.52-4.81 GiB). Every finished dedup output matched DuckDB row for row (14,999,347 rows).
+
+Caveats: other work on the VM was paused, but an idle PostgreSQL server stayed up and the load average rose during part of the run (the CPU gate passed before every run). DuckDB was 21 to 36% slower on the dedup and group by than on October 22, so compare engines within this session, not with the October 22 tables. Only Polars 2.0.0 was tested: it is still the newest release on PyPI and no wheel from Polars main was available. The Polars changes that look relevant, [#29911](https://github.com/pola-rs/polars/pull/29911) (streaming out-of-core group by with shuffles) and [#30237](https://github.com/pola-rs/polars/pull/30237) (default spill compression level 1), are merged on main but not released yet. I will rerun when the next Polars release ships.
+
+Details, raw results and output checks: [results/polars_ooc_budget_2026-10-23/README.md](results/polars_ooc_budget_2026-10-23/README.md).
+
 ## Known limitations
 
 - **The original runs tested one Polars formulation of the dedup:** `filter(int_range(len()).over(..., order_by=..., descending=True) == 0)`, the direct translation of the SQL. Other formulations may stream better and were not measured in those runs, for example:
@@ -165,7 +184,7 @@ The follow-up results are specific to the recorded Linux hosts. The spill budget
 - **One shared VM.** Other processes were running. Runs were gated on free memory and CPU, and the gate values are recorded per run, but treat differences under about 10 to 15% as noise. The DuckDB 1.5.6 and 2.0.0 runs were three days apart.
 - **Single node only, and small on purpose.** The largest input is 3.2 GB of Parquet. This says nothing about multi-node Spark, Databricks or Fabric, or governed Delta writes.
 - **Spark pays its JVM start every run** (about 5 s). That is the point of the fresh-process method, but it is not how a warm cluster behaves. `query_s` in the raw data isolates the query part.
-- **Engine memory settings are left mostly at defaults.** Spark has `driver.memory = 3g` and nothing else tuned; Polars has no memory setting apart from the one out-of-core run.
+- **Engine memory settings are left mostly at defaults.** Spark has `driver.memory = 3g` and nothing else tuned; Polars has no memory setting apart from the out-of-core budget runs (October 22, and the October 23 update above).
 - **Validation needs the outputs.** `validate.py` compares row counts and rounded checksums of the Parquet outputs in `out/`, which are not in this repo. In the original runs all engines matched wherever they produced output.
 - **numpy was not logged** at run time. With numpy 2.5.4 and pyarrow 26.0.0 the 10M data regenerates byte-identical; see [VERSIONS.md](VERSIONS.md) and `data_checksums.md5`.
 
