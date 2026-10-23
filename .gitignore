@@ -5,3 +5,7 @@ out/
 .venv/
 __pycache__/
 *.pyc
+
+# Local symlinks to shared data and venv
+/data
+/.venv
