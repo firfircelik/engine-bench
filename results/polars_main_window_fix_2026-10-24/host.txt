@@ -1,0 +1,52 @@
+Sat Oct 24 17:45:15 +03 2026
+Linux grok-bot-vm-62564733 6.12.94+ #1 SMP PREEMPT_DYNAMIC Mon Oct 19 19:23:48 UTC 2026 x86_64 GNU/Linux
+8
+               total        used        free      shared  buff/cache   available
+Mem:           16002        6452        5489         161        4556        9550
+Swap:              0           0           0
+CPU(s):                                  8
+Model name:                              Intel(R) Xeon(R) Processor
+3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]
+duckdb 2.0.0 polars 2.0.0 pyarrow 26.0.0 psutil 7.2.2 numpy 2.5.4
+--------Version info---------
+Polars:              2.0.0
+Build:               d02c62175ad906f3c54cda7a0d917e6a72f73865
+Index type:          UInt32
+Platform:            Linux-6.12.94+-x86_64-with-glibc2.41
+Python:              3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]
+Runtime:             rt32
+
+----Optional dependencies----
+Azure CLI            <not installed>
+adbc_driver_manager  <not installed>
+altair               <not installed>
+azure.identity       <not installed>
+boto3                <not installed>
+cloudpickle          <not installed>
+connectorx           <not installed>
+deltalake            <not installed>
+fastexcel            <not installed>
+fsspec               <not installed>
+gevent               <not installed>
+google.auth          <not installed>
+great_tables         <not installed>
+matplotlib           <not installed>
+numpy                2.5.4
+openpyxl             <not installed>
+pandas               <not installed>
+polars_cloud         <not installed>
+polars_iceberg       <not installed>
+polars_nanook        <not installed>
+pyarrow              26.0.0
+pydantic             <not installed>
+pyiceberg            <not installed>
+sqlalchemy           <not installed>
+torch                <not installed>
+xlsx2csv             <not installed>
+xlsxwriter           <not installed>
+polars            2.0.0
+polars-runtime-32 2.0.0
+polars source: github.com/pola-rs/polars main @ d02c62175ad906f3c54cda7a0d917e6a72f73865
+  perf: Return freed memory to the OS right away while out-of-core data is spilled (#30280) (2026-10-24T15:11:31+02:00)
+engine-bench @ 94e21d2329a2f8d5348eaf5986e5dd67ae72793e
+150m+products checksum mismatches: 0

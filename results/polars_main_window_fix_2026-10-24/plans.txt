@@ -1,0 +1,55 @@
+polars 2.0.0 build commit d02c62175ad906f3c54cda7a0d917e6a72f73865
+
+== q3_window_latest
+physical streaming nodes (top to bottom): ['select', 'filter', 'select', 'with-columns', 'window[maintain_order: true, ordered_eval: true]', 'multi-scan[parquet]']
+in-memory fallback node present: False
+explain():
+SELECT [col("customer_id"), col("order_id"), col("ts"), (col("qty").strict_cast(Float64) * col("price")).alias("amount")]
+  FILTER (0.int_range([len().cast(Int64)]).over(partition_by: [col("customer_id")], order_by: col("ts").row_encode([col("order_id")])) == 0)
+  FROM
+    Parquet SCAN [data/sales_150m/part-0000.parquet, ... 29 other sources]
+    PROJECT 5/8 COLUMNS
+    ESTIMATED ROWS: 150000721
+
+== q3_sort_unique_latest
+physical streaming nodes (top to bottom): ['sorted-unique\ncustomer_id\n', 'select', 'sort', 'with-columns', 'select', 'multi-scan[parquet]']
+in-memory fallback node present: False
+explain():
+UNIQUE[maintain_order: false, keep_strategy: First] BY Some(["customer_id"])
+  SORT BY [descending: [false, true, true], nulls_last: [true, true, true]] [col("customer_id"), col("ts"), col("order_id")]
+    SELECT [col("customer_id"), col("order_id"), col("ts"), (col("qty").strict_cast(Float64) * col("price")).alias("amount")]
+      Parquet SCAN [data/sales_150m/part-0000.parquet, ... 29 other sources]
+      PROJECT 5/8 COLUMNS
+      ESTIMATED ROWS: 150000721
+
+== q3_max_sort_latest
+physical streaming nodes (top to bottom): ['sorted-unique\ncustomer_id\n', 'select', 'sort', 'with-columns', 'semi-join', 'select', 'multi-scan[parquet]', 'select', 'group-by', 'select', 'multi-scan[parquet]']
+in-memory fallback node present: False
+explain():
+UNIQUE[maintain_order: false, keep_strategy: First] BY Some(["customer_id"])
+  SORT BY [descending: [false, true], nulls_last: [true, true]] [col("customer_id"), col("order_id")]
+    SEMI JOIN:
+    LEFT PLAN ON: [col("customer_id"), col("ts")]
+      SELECT [col("customer_id"), col("order_id"), col("ts"), (col("qty").strict_cast(Float64) * col("price")).alias("amount")]
+        CACHE[id: 636dc29a-5398-40b0-ac53-f1904d610e16]
+          Parquet SCAN [data/sales_150m/part-0000.parquet, ... 29 other sources]
+          PROJECT 5/8 COLUMNS
+          ESTIMATED ROWS: 150000721
+    RIGHT PLAN ON: [col("customer_id"), col("ts")]
+      AGGREGATE[maintain_order: false]
+        [col("ts").max()] BY [col("customer_id")]
+        FROM
+        simple π 2/2 ["customer_id", "ts"]
+          CACHE[id: 636dc29a-5398-40b0-ac53-f1904d610e16]
+    END SEMI JOIN
+
+== q4_highcard_agg
+physical streaming nodes (top to bottom): ['select', 'group-by', 'select', 'multi-scan[parquet]']
+in-memory fallback node present: False
+explain():
+AGGREGATE[maintain_order: false]
+  [len().alias("orders"), (col("qty").strict_cast(Float64) * col("price")).sum().alias("revenue"), col("ts").min().alias("first_ts"), col("ts").max().alias("last_ts")] BY [col("customer_id")]
+  FROM
+  Parquet SCAN [data/sales_150m/part-0000.parquet, ... 29 other sources]
+  PROJECT 4/8 COLUMNS
+  ESTIMATED ROWS: 150000721

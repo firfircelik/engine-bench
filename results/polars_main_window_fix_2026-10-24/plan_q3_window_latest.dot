@@ -1,0 +1,19 @@
+digraph polars {
+rankdir="BT"
+node [fontname="Monospace"]
+fontname="Helvetica"
+fontsize="10"
+labelloc="b"
+label=<<BR/><BR/><B>Legend</B><BR/><BR/>◯ streaming engine node <FONT COLOR="0.16 0.3 1.0">⬤</FONT> potentially memory-intensive node <FONT COLOR="0.0 0.3 1.0">⬤</FONT> in-memory engine fallback>
+4294967303 [label="select\ncustomer_id = col(\"customer_id\")                            \n   order_id = col(\"order_id\")                               \n         ts = col(\"ts\")                                     \n     amount = col(\"qty\").strict_cast(Float64) * col(\"price\")\n"];
+4294967302 [label="filter\n_POLARS_TMP_PLAN_0 = col(\"_POLARS_TMP_PLAN_0\")\nproject 5 / 6: customer_id, order_id, ts, qty, price"];
+4294967300 [label="select\ncustomer_id, order_id, ts, qty, price, _POLARS_TMP_PLAN_0"];
+4294967299 [label="with-columns\n_POLARS_TMP_PLAN_0 = col(\"_POLARS_TMP_PLAN_1\") == 0\n"];
+4294967298 [label="window[maintain_order: true, ordered_eval: true]\npartition by: customer_id\norder by: ts, order_id\n_POLARS_TMP_PLAN_1 = 0.int_range([len().cast(Int64)]).over(partition_by: [col(\"customer_id\")], order_by: col(\"ts\").row_encode([col(\"order_id\")]))\n",style=filled,fillcolor="0.16 0.3 1.0"];
+4294967297 [label="multi-scan[parquet]\n30 sources\nproject: 5 total, 5 from file"];
+4294967297 -> 4294967298;
+4294967298 -> 4294967299;
+4294967299 -> 4294967300;
+4294967300 -> 4294967302;
+4294967302 -> 4294967303;
+}
