@@ -1,0 +1,15 @@
+digraph polars {
+rankdir="BT"
+node [fontname="Monospace"]
+fontname="Helvetica"
+fontsize="10"
+labelloc="b"
+label=<<BR/><BR/><B>Legend</B><BR/><BR/>◯ streaming engine node <FONT COLOR="0.16 0.3 1.0">⬤</FONT> potentially memory-intensive node <FONT COLOR="0.0 0.3 1.0">⬤</FONT> in-memory engine fallback>
+4294967300 [label="select\ncustomer_id = _POLARS_TMP_PHYS_7\norders = _POLARS_TMP_PHYS_8\nrevenue = _POLARS_TMP_PHYS_10\nfirst_ts = _POLARS_TMP_PHYS_12\nlast_ts = _POLARS_TMP_PHYS_13"];
+4294967299 [label="group-by\nkey:\n_POLARS_TMP_PHYS_7 = col(\"_POLARS_TMP_PHYS_7\")\n\naggs:\n _POLARS_TMP_PHYS_8 = len()                           \n_POLARS_TMP_PHYS_10 = col(\"_POLARS_TMP_PHYS_14\").sum()\n_POLARS_TMP_PHYS_12 = col(\"ts\").min()                 \n_POLARS_TMP_PHYS_13 = col(\"ts\").max()                 \n",style=filled,fillcolor="0.16 0.3 1.0"];
+4294967298 [label="select\n _POLARS_TMP_PHYS_7 = col(\"customer_id\")                            \n_POLARS_TMP_PHYS_14 = col(\"qty\").strict_cast(Float64) * col(\"price\")\n                 ts = col(\"ts\")                                     \n"];
+4294967297 [label="multi-scan[parquet]\n30 sources\nproject: 4 total, 4 from file"];
+4294967297 -> 4294967298;
+4294967298 -> 4294967299;
+4294967299 -> 4294967300;
+}
