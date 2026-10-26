@@ -63,9 +63,9 @@ All Polars cells are 3/3 unless shown as 0/3. DuckDB was 27% faster today than o
 
 ## Findings
 
-- 2.1.0 behaves like main `d02c621` and slightly better. The window inside `filter()` runs in the streaming window node, and with any budget set it finishes 3/3 at 150M rows under the 4.5 GiB cap.
+- 2.1.0 behaves like main `d02c621` on memory, with lower peaks at small budgets. The window inside `filter()` runs in the streaming window node, and with any budget set it finishes 3/3 at 150M rows under the 4.5 GiB cap.
 - With the budget unset, the window dedup and sort + unique still exceed the 4.5 GiB cap (killed at 4.50 to 4.77 GiB). With no cgroup memory limit visible to Polars on this VM, the unset case still needs an explicit `POLARS_OOC_MEMORY_BUDGET_MB`.
-- Peak memory follows the budget more closely than on main. Sort + unique peaked at 1.13 GiB at 1024 MB (2.48 on main) and 0.69 GiB at 512 MB (2.05). Group by peaked at 1.12 and 0.74 GiB (1.48 and 0.95). At 1024 MB the window dedup peaked at 1.29 GiB (1.52) and was faster (20.11 s against 28.68 s). Sort + unique at 1024 MB was slower than on main (63.31 s against 42.08 s).
+- Peak memory follows the budget more closely than on main. Sort + unique peaked at 1.13 GiB at 1024 MB (2.48 on main) and 0.69 GiB at 512 MB (2.05). Group by peaked at 1.12 and 0.74 GiB (1.48 and 0.95). At 1024 MB the window dedup peaked at 1.29 GiB (1.52). Wall times differ in both directions (window dedup at 1024 MB 20.11 s against 28.68 s, sort + unique at 1024 MB 63.31 s against 42.08 s), but the same DuckDB query also went from 11.12 s to 8.07 s between the sessions, so these are not evidence that 2.1.0 is faster or slower than main.
 - The window dedup at 512 MB still peaks higher (2.15 GiB) than at 1024 MB (1.29 GiB), as on main.
 - DuckDB's window query is still faster in the same session: 8.07 s against 18.78 s for Polars at 3072 MB, about 2.3x. The fastest Polars dedup is still the max timestamp + sort rewrite (5.12 s at default, 3.72 GiB).
 
