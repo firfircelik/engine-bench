@@ -1,0 +1,95 @@
+== plans
+== repro 60M
+window_in_filter   physical plan nodes (top to bottom): ['filter', 'select', 'with-columns', 'window[maintain_order: true, ordered_eval: true]', 'multi-scan[parquet]']
+window_in_columns  physical plan nodes (top to bottom): ['filter', 'select', 'with-columns', 'window[maintain_order: true, ordered_eval: true]', 'multi-scan[parquet]']
+group_by           physical plan nodes (top to bottom): ['select', 'group-by', 'select', 'multi-scan[parquet]']
+window_in_filter   budget=unset peak_rss= 3.76 GiB  rows=5999734 secs=5.04
+window_in_filter   budget= 1024 peak_rss= 1.27 GiB  rows=5999734 secs=10.33
+window_in_filter   budget=  256 peak_rss= 1.06 GiB  rows=5999734 secs=16.48
+window_in_columns  budget=unset peak_rss= 3.75 GiB  rows=5999734 secs=3.72
+window_in_columns  budget= 1024 peak_rss= 1.27 GiB  rows=5999734 secs=10.98
+window_in_columns  budget=  256 peak_rss= 1.04 GiB  rows=5999734 secs=17.78
+group_by           budget=unset peak_rss= 1.76 GiB  rows=5999734 secs=1.26
+group_by           budget= 1024 peak_rss= 1.51 GiB  rows=5999734 secs=2.84
+group_by           budget=  256 peak_rss= 0.89 GiB  rows=5999734 secs=6.20
+== duckdb ref
+150m r1 q1_filter_agg      duckdb    ok wall=   1.02s q=0.776 rss=0.77GiB rows=1000 avail0=11.2 busy0=4% load0=30.1
+150m r1 q2_join_agg        duckdb    ok wall=   1.61s q=1.472 rss=0.39GiB rows=18356 avail0=11.3 busy0=4% load0=29.5
+150m r1 q3_window_latest   duckdb    ok wall=  10.81s q=10.586 rss=3.03GiB rows=14999347 avail0=11.5 busy0=2% load0=28.0
+150m r1 q4_highcard_agg    duckdb    ok wall=   9.80s q=9.609 rss=3.01GiB rows=14999347 avail0=11.1 busy0=1% load0=23.3
+150m r2 q1_filter_agg      duckdb    ok wall=   0.93s q=0.745 rss=0.90GiB rows=1000 avail0=11.8 busy0=4% load0=19.5
+150m r2 q2_join_agg        duckdb    ok wall=   1.45s q=1.313 rss=0.42GiB rows=18356 avail0=11.2 busy0=2% load0=19.5
+150m r2 q3_window_latest   duckdb    ok wall=  11.12s q=10.914 rss=3.03GiB rows=14999347 avail0=11.6 busy0=1% load0=18.7
+150m r2 q4_highcard_agg    duckdb    ok wall=  10.38s q=10.198 rss=3.03GiB rows=14999347 avail0=10.9 busy0=2% load0=15.6
+150m r3 q1_filter_agg      duckdb    ok wall=   0.97s q=0.76 rss=0.84GiB rows=1000 avail0=11.8 busy0=1% load0=13.7
+150m r3 q2_join_agg        duckdb    ok wall=   1.45s q=1.308 rss=0.36GiB rows=18356 avail0=11.3 busy0=1% load0=13.7
+150m r3 q3_window_latest   duckdb    ok wall=  13.13s q=12.889 rss=3.02GiB rows=14999347 avail0=11.6 busy0=2% load0=14.5
+150m r3 q4_highcard_agg    duckdb    ok wall=  11.02s q=10.772 rss=3.03GiB rows=14999347 avail0=11.4 busy0=2% load0=12.2
+wrote /workspace/engine-bench-latest/results/polars_main_window_fix_2026-10-24/duckdb_ref.jsonl
+== polars default
+150m r1 q1_filter_agg      polars    ok wall=   0.96s q=0.719 rss=0.99GiB rows=1000 avail0=11.9 busy0=2% load0=11.8
+150m r1 q2_join_agg        polars    ok wall=   1.34s q=1.109 rss=1.90GiB rows=18356 avail0=12.1 busy0=1% load0=11.5
+150m r1 q3_window_latest   polars  watchdog: tree RSS 4.53 GiB > budget 4.5 GiB wall=   2.33s q=- rss=4.53GiB rows=- avail0=11.9 busy0=1% load0=10.6
+150m r1 q3_sort_unique_latest polars  watchdog: tree RSS 4.54 GiB > budget 4.5 GiB wall=   1.80s q=- rss=4.54GiB rows=- avail0=12.2 busy0=2% load0=9.8
+150m r1 q3_max_sort_latest polars    ok wall=   4.98s q=4.766 rss=3.79GiB rows=14999347 avail0=12.1 busy0=2% load0=9.0
+150m r1 q4_highcard_agg    polars    ok wall=   4.52s q=4.294 rss=4.19GiB rows=14999347 avail0=11.3 busy0=1% load0=8.5
+150m r2 q1_filter_agg      polars    ok wall=   0.92s q=0.691 rss=0.99GiB rows=1000 avail0=11.6 busy0=2% load0=8.0
+150m r2 q2_join_agg        polars    ok wall=   1.45s q=1.165 rss=1.84GiB rows=18356 avail0=12.1 busy0=2% load0=7.4
+150m r2 q3_window_latest   polars  watchdog: tree RSS 4.76 GiB > budget 4.5 GiB wall=   2.08s q=- rss=4.76GiB rows=- avail0=12.0 busy0=1% load0=6.8
+150m r2 q3_sort_unique_latest polars  watchdog: tree RSS 4.74 GiB > budget 4.5 GiB wall=   1.49s q=- rss=4.74GiB rows=- avail0=12.2 busy0=1% load0=6.2
+150m r2 q3_max_sort_latest polars    ok wall=   5.34s q=5.129 rss=3.69GiB rows=14999347 avail0=12.2 busy0=1% load0=5.7
+150m r2 q4_highcard_agg    polars    ok wall=   3.84s q=3.576 rss=4.19GiB rows=14999347 avail0=11.2 busy0=1% load0=6.0
+150m r3 q1_filter_agg      polars    ok wall=   0.85s q=0.662 rss=0.96GiB rows=1000 avail0=11.2 busy0=1% load0=5.9
+150m r3 q2_join_agg        polars    ok wall=   1.49s q=1.189 rss=1.91GiB rows=18356 avail0=12.0 busy0=1% load0=5.4
+150m r3 q3_window_latest   polars  watchdog: tree RSS 4.67 GiB > budget 4.5 GiB wall=   1.51s q=- rss=4.67GiB rows=- avail0=12.0 busy0=10% load0=5.4
+150m r3 q3_sort_unique_latest polars  watchdog: tree RSS 4.65 GiB > budget 4.5 GiB wall=   1.19s q=- rss=4.65GiB rows=- avail0=11.7 busy0=14% load0=5.7
+150m r3 q3_max_sort_latest polars    ok wall=   5.47s q=5.262 rss=3.76GiB rows=14999347 avail0=11.9 busy0=10% load0=6.1
+150m r3 q4_highcard_agg    polars    ok wall=   3.64s q=3.382 rss=4.20GiB rows=14999347 avail0=11.1 busy0=12% load0=5.9
+wrote /workspace/engine-bench-latest/results/polars_main_window_fix_2026-10-24/polars_default.jsonl
+{"phase": "polars_default", "q1_filter_agg": {"match": true, "duckdb": "(1000, 49589394, 62107242602.0)", "polars": "(1000, 49589394, 62107242602.0)"}, "q2_join_agg": {"match": true, "duckdb": "(18356, 138001076, 172855341241.0, -21357.443)", "polars": "(18356, 138001076, 172855341241.0, -21357.443)"}, "q4_highcard_agg": {"match": true, "duckdb": "(14999347, 150000000, 187883262241.0, datetime.datetime(2026, 1, 1, 0, 0), datetime.datetime(2026, 9, 27, 23, 59, 59))", "polars": "(14999347, 150000000, 187883262241.0, datetime.datetime(2026, 1, 1, 0, 0), datetime.datetime(2026, 9, 27, 23, 59, 59))"}, "q3_window_latest": {"match": null, "error": "IO Error: No files found that match the pattern \"out/polars/150m_q3_window_latest.parquet\"\n\nLINE 1: ...') EXCEPT ALL SELECT customer_id, order_id, ts, amount FROM read_parquet('out/polars/150m_q3_wind"}, "q3_sort_unique_latest": {"match": null, "error": "IO Error: No files found that match the pattern \"out/polars/150m_q3_sort_unique_latest.parquet\"\n\nLINE 1: ...') EXCEPT ALL SELECT customer_id, order_id, ts, amount FROM read_parquet('out/polars/150m_q3"}, "q3_max_sort_latest": {"match": true, "rows": 14999347, "missing": 0, "extra": 0}}
+== polars ooc3072
+150m r1 q1_filter_agg      polars    ok wall=   0.90s q=0.676 rss=0.96GiB rows=1000 avail0=10.9 busy0=16% load0=5.8
+150m r1 q2_join_agg        polars    ok wall=   1.61s q=1.347 rss=1.94GiB rows=18356 avail0=11.9 busy0=16% load0=5.6
+150m r1 q3_window_latest   polars    ok wall=  23.20s q=22.981 rss=3.52GiB rows=14999347 avail0=11.7 busy0=15% load0=5.2
+150m r1 q3_sort_unique_latest polars    ok wall=  35.29s q=35.04 rss=3.73GiB rows=14999347 avail0=11.4 busy0=10% load0=13.6
+150m r1 q3_max_sort_latest polars    ok wall=   7.96s q=7.683 rss=2.83GiB rows=14999347 avail0=11.6 busy0=2% load0=14.9
+150m r1 q4_highcard_agg    polars    ok wall=   6.01s q=5.767 rss=3.10GiB rows=14999347 avail0=11.4 busy0=2% load0=13.2
+150m r2 q1_filter_agg      polars    ok wall=   0.85s q=0.631 rss=1.00GiB rows=1000 avail0=11.4 busy0=11% load0=12.9
+150m r2 q2_join_agg        polars    ok wall=   1.44s q=1.145 rss=1.89GiB rows=18356 avail0=11.6 busy0=1% load0=12.8
+150m r2 q3_window_latest   polars    ok wall=  22.69s q=22.328 rss=3.44GiB rows=14999347 avail0=11.5 busy0=1% load0=11.8
+150m r2 q3_sort_unique_latest polars    ok wall=  33.26s q=33.008 rss=3.60GiB rows=14999347 avail0=11.4 busy0=7% load0=19.4
+150m r2 q3_max_sort_latest polars    ok wall=   6.78s q=6.573 rss=2.97GiB rows=14999347 avail0=11.4 busy0=14% load0=19.4
+150m r2 q4_highcard_agg    polars    ok wall=   5.87s q=5.601 rss=2.99GiB rows=14999347 avail0=11.3 busy0=1% load0=17.7
+150m r3 q1_filter_agg      polars    ok wall=   0.79s q=0.587 rss=0.99GiB rows=1000 avail0=11.4 busy0=8% load0=15.9
+150m r3 q2_join_agg        polars    ok wall=   1.31s q=1.083 rss=1.91GiB rows=18356 avail0=11.9 busy0=4% load0=14.7
+150m r3 q3_window_latest   polars    ok wall=  22.85s q=22.539 rss=3.54GiB rows=14999347 avail0=11.8 busy0=2% load0=13.5
+150m r3 q3_sort_unique_latest polars    ok wall=  33.62s q=33.359 rss=3.66GiB rows=14999347 avail0=11.2 busy0=1% load0=17.1
+150m r3 q3_max_sort_latest polars    ok wall=   7.03s q=6.799 rss=2.85GiB rows=14999347 avail0=11.6 busy0=1% load0=18.2
+150m r3 q4_highcard_agg    polars    ok wall=   6.07s q=5.796 rss=2.99GiB rows=14999347 avail0=11.6 busy0=1% load0=16.6
+wrote /workspace/engine-bench-latest/results/polars_main_window_fix_2026-10-24/polars_ooc3072.jsonl
+{"phase": "polars_3072", "q1_filter_agg": {"match": true, "duckdb": "(1000, 49589394, 62107242602.0)", "polars": "(1000, 49589394, 62107242602.0)"}, "q2_join_agg": {"match": true, "duckdb": "(18356, 138001076, 172855341241.0, -21357.443)", "polars": "(18356, 138001076, 172855341241.0, -21357.443)"}, "q4_highcard_agg": {"match": true, "duckdb": "(14999347, 150000000, 187883262241.0, datetime.datetime(2026, 1, 1, 0, 0), datetime.datetime(2026, 9, 27, 23, 59, 59))", "polars": "(14999347, 150000000, 187883262241.0, datetime.datetime(2026, 1, 1, 0, 0), datetime.datetime(2026, 9, 27, 23, 59, 59))"}, "q3_window_latest": {"match": true, "rows": 14999347, "missing": 0, "extra": 0}, "q3_sort_unique_latest": {"match": true, "rows": 14999347, "missing": 0, "extra": 0}, "q3_max_sort_latest": {"match": true, "rows": 14999347, "missing": 0, "extra": 0}}
+== polars ooc1024
+150m r1 q3_window_latest   polars    ok wall=  30.80s q=30.598 rss=1.52GiB rows=14999347 avail0=11.5 busy0=2% load0=13.4
+150m r1 q3_sort_unique_latest polars    ok wall=  48.94s q=48.676 rss=2.37GiB rows=14999347 avail0=10.9 busy0=15% load0=23.3
+150m r1 q4_highcard_agg    polars    ok wall=  11.59s q=11.36 rss=1.56GiB rows=14999347 avail0=11.6 busy0=1% load0=27.3
+150m r2 q3_window_latest   polars    ok wall=  28.68s q=28.488 rss=1.64GiB rows=14999347 avail0=11.5 busy0=1% load0=28.1
+150m r2 q3_sort_unique_latest polars    ok wall=  42.08s q=41.809 rss=2.48GiB rows=14999347 avail0=11.1 busy0=2% load0=27.4
+150m r2 q4_highcard_agg    polars    ok wall=  11.59s q=11.368 rss=1.48GiB rows=14999347 avail0=11.4 busy0=21% load0=16.3
+150m r3 q3_window_latest   polars    ok wall=  28.66s q=28.441 rss=1.40GiB rows=14999347 avail0=11.0 busy0=1% load0=14.3
+150m r3 q3_sort_unique_latest polars    ok wall=  41.78s q=41.518 rss=2.50GiB rows=14999347 avail0=11.2 busy0=1% load0=20.8
+150m r3 q4_highcard_agg    polars    ok wall=  12.63s q=12.387 rss=1.46GiB rows=14999347 avail0=11.5 busy0=2% load0=23.2
+wrote /workspace/engine-bench-latest/results/polars_main_window_fix_2026-10-24/polars_ooc1024.jsonl
+{"phase": "polars_1024", "q1_filter_agg": {"match": null, "error": "IO Error: No files found that match the pattern \"out/polars/150m_q1_filter_agg.parquet\"\n\nLINE 1: SELECT COUNT(*), SUM(orders), ROUND(SUM(revenue), 0) FROM read_parquet('out/polars/150m_q1_filter_agg.p"}, "q2_join_agg": {"match": null, "error": "IO Error: No files found that match the pattern \"out/polars/150m_q2_join_agg.parquet\"\n\nLINE 1: ...), ROUND(SUM(revenue), 0), ROUND(SUM(avg_delta), 3) FROM read_parquet('out/polars/150m_q2_join_agg.par"}, "q4_highcard_agg": {"match": true, "duckdb": "(14999347, 150000000, 187883262241.0, datetime.datetime(2026, 1, 1, 0, 0), datetime.datetime(2026, 9, 27, 23, 59, 59))", "polars": "(14999347, 150000000, 187883262241.0, datetime.datetime(2026, 1, 1, 0, 0), datetime.datetime(2026, 9, 27, 23, 59, 59))"}, "q3_window_latest": {"match": true, "rows": 14999347, "missing": 0, "extra": 0}, "q3_sort_unique_latest": {"match": true, "rows": 14999347, "missing": 0, "extra": 0}, "q3_max_sort_latest": {"match": null, "error": "IO Error: No files found that match the pattern \"out/polars/150m_q3_max_sort_latest.parquet\"\n\nLINE 1: ...') EXCEPT ALL SELECT customer_id, order_id, ts, amount FROM read_parquet('out/polars/150m_q3_ma"}}
+== polars ooc512
+150m r1 q3_window_latest   polars    ok wall=  40.37s q=40.147 rss=2.24GiB rows=14999347 avail0=11.4 busy0=1% load0=25.3
+150m r1 q3_sort_unique_latest polars    ok wall= 212.08s q=211.817 rss=1.95GiB rows=14999347 avail0=11.1 busy0=2% load0=22.0
+150m r1 q4_highcard_agg    polars    ok wall=  18.33s q=18.139 rss=0.81GiB rows=14999347 avail0=11.4 busy0=3% load0=1.8
+150m r2 q3_window_latest   polars    ok wall=  42.58s q=42.383 rss=2.20GiB rows=14999347 avail0=11.4 busy0=5% load0=24.8
+150m r2 q3_sort_unique_latest polars    ok wall=  75.22s q=74.947 rss=2.05GiB rows=14999347 avail0=11.2 busy0=2% load0=20.3
+150m r2 q4_highcard_agg    polars    ok wall=  22.54s q=22.289 rss=0.95GiB rows=14999347 avail0=11.8 busy0=1% load0=7.2
+150m r3 q3_window_latest   polars    ok wall=  42.49s q=42.25 rss=2.20GiB rows=14999347 avail0=11.3 busy0=4% load0=22.2
+150m r3 q3_sort_unique_latest polars    ok wall=  77.73s q=77.469 rss=2.05GiB rows=14999347 avail0=11.2 busy0=1% load0=21.5
+150m r3 q4_highcard_agg    polars    ok wall=  20.52s q=20.302 rss=0.95GiB rows=14999347 avail0=11.9 busy0=6% load0=8.0
+wrote /workspace/engine-bench-latest/results/polars_main_window_fix_2026-10-24/polars_ooc512.jsonl
+{"phase": "polars_512", "q1_filter_agg": {"match": null, "error": "IO Error: No files found that match the pattern \"out/polars/150m_q1_filter_agg.parquet\"\n\nLINE 1: SELECT COUNT(*), SUM(orders), ROUND(SUM(revenue), 0) FROM read_parquet('out/polars/150m_q1_filter_agg.p"}, "q2_join_agg": {"match": null, "error": "IO Error: No files found that match the pattern \"out/polars/150m_q2_join_agg.parquet\"\n\nLINE 1: ...), ROUND(SUM(revenue), 0), ROUND(SUM(avg_delta), 3) FROM read_parquet('out/polars/150m_q2_join_agg.par"}, "q4_highcard_agg": {"match": true, "duckdb": "(14999347, 150000000, 187883262241.0, datetime.datetime(2026, 1, 1, 0, 0), datetime.datetime(2026, 9, 27, 23, 59, 59))", "polars": "(14999347, 150000000, 187883262241.0, datetime.datetime(2026, 1, 1, 0, 0), datetime.datetime(2026, 9, 27, 23, 59, 59))"}, "q3_window_latest": {"match": true, "rows": 14999347, "missing": 0, "extra": 0}, "q3_sort_unique_latest": {"match": true, "rows": 14999347, "missing": 0, "extra": 0}, "q3_max_sort_latest": {"match": null, "error": "IO Error: No files found that match the pattern \"out/polars/150m_q3_max_sort_latest.parquet\"\n\nLINE 1: ...') EXCEPT ALL SELECT customer_id, order_id, ts, amount FROM read_parquet('out/polars/150m_q3_ma"}}
+ALLDONE

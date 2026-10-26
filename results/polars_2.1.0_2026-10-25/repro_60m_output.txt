@@ -1,0 +1,52 @@
+--------Version info---------
+Polars:              2.1.0
+Build:               7f902bd3ffd27ff82d14278a09a295ff2f7aed92
+Index type:          UInt32
+Platform:            Linux-6.12.94+-x86_64-with-glibc2.41
+Python:              3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]
+Runtime:             rt32
+
+----Optional dependencies----
+Azure CLI            <not installed>
+adbc_driver_manager  <not installed>
+altair               <not installed>
+azure.identity       <not installed>
+boto3                <not installed>
+cloudpickle          <not installed>
+connectorx           <not installed>
+deltalake            <not installed>
+fastexcel            <not installed>
+fsspec               <not installed>
+gevent               <not installed>
+google.auth          <not installed>
+great_tables         <not installed>
+matplotlib           <not installed>
+numpy                2.5.4
+openpyxl             <not installed>
+pandas               <not installed>
+polars_cloud         <not installed>
+polars_iceberg       <not installed>
+polars_nanook        <not installed>
+pyarrow              26.0.0
+pydantic             <not installed>
+pyiceberg            <not installed>
+sqlalchemy           <not installed>
+torch                <not installed>
+xlsx2csv             <not installed>
+xlsxwriter           <not installed>
+
+rows=60,000,000 keys~6,000,000 parquet=901 MiB POLARS_OOC_MEMORY_BUDGET_MB in unset,1024,256 POLARS_MAX_THREADS=8
+
+window_in_filter   physical plan nodes (top to bottom): ['filter', 'select', 'with-columns', 'window[maintain_order: true, ordered_eval: true]', 'multi-scan[parquet]']
+window_in_columns  physical plan nodes (top to bottom): ['filter', 'select', 'with-columns', 'window[maintain_order: true, ordered_eval: true]', 'multi-scan[parquet]']
+group_by           physical plan nodes (top to bottom): ['select', 'group-by', 'select', 'multi-scan[parquet]']
+
+window_in_filter   budget=unset peak_rss= 3.81 GiB  rows=5999734 secs=3.60
+window_in_filter   budget= 1024 peak_rss= 1.15 GiB  rows=5999734 secs=7.66
+window_in_filter   budget=  256 peak_rss= 0.97 GiB  rows=5999734 secs=17.53
+window_in_columns  budget=unset peak_rss= 3.74 GiB  rows=5999734 secs=3.84
+window_in_columns  budget= 1024 peak_rss= 1.16 GiB  rows=5999734 secs=7.71
+window_in_columns  budget=  256 peak_rss= 0.99 GiB  rows=5999734 secs=17.51
+group_by           budget=unset peak_rss= 1.83 GiB  rows=5999734 secs=1.16
+group_by           budget= 1024 peak_rss= 1.10 GiB  rows=5999734 secs=2.29
+group_by           budget=  256 peak_rss= 0.46 GiB  rows=5999734 secs=3.33
